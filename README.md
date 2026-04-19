@@ -28,7 +28,7 @@
 
 ```
 project-root/
-├── helpers/
+├── src/
 │ ├── crawlers/
 | | ├── api_utils.py         # Utilities for handling API requests and responses
 │ │ └── crawler_utils.py     # Utilities for extracting media download links
@@ -39,7 +39,8 @@ project-root/
 │ ├── managers/
 │ │ ├── live_manager.py      # Manages a real-time live display
 │ │ ├── log_manager.py       # Manages real-time log updates
-│ │ └── progress_manager.py  # Manages progress bars
+│ │ ├── progress_manager.py  # Manages progress bars
+│ │ └── summary_manager.py   # Manages final summaries
 │ ├── bunkr_utils.py         # Utilities for checking Bunkr status
 │ ├── config.py              # Manages constants and settings used across the project
 │ ├── file_utils.py          # Utilities for managing file operations
@@ -98,7 +99,9 @@ The script supports selective file downloads from an album, allowing you to excl
 
 ## Ignore List
 
-The Ignore List is specified using the `--ignore` argument in the command line. This allows you to skip the download of any file from an album if its filename contains at least one of the specified strings in the list. Item in the list should be separated by a space.
+The Ignore List is specified using the `--ignore` argument in the command line.
+This allows you to skip the download of any file from an album if its filename contains at least one of the specified strings in the list.
+Item in the list should be separated by a space.
 
 ### Usage
 
@@ -116,7 +119,9 @@ python3 downloader.py https://bunkr.si/a/PUK068QE --ignore .zip
 
 ## Include List
 
-The Include List is specified using the `--include` argument in the command line. This allows you to download a file from an album only if its filename contains at least one of the specified strings in the list. Items in the list should be separated by a space.
+The Include List is specified using the `--include` argument in the command line.
+This allows you to download a file from an album only if its filename contains at least one of the specified strings in the list.
+Items in the list should be separated by a space.
 
 ### Usage
 
@@ -132,7 +137,8 @@ python3 downloader.py https://bunkr.si/a/PUK068QE --include FullSizeRender
 
 ## Batch Download
 
-To batch download from multiple URLs, you can use the `main.py` script. This script reads URLs from a file named `URLs.txt` and downloads each one using the media downloader.
+To batch download from multiple URLs, you can use the `main.py` script.
+This script reads URLs from a file named `URLs.txt` and downloads each one using the media downloader.
 
 ### Usage
 
@@ -157,7 +163,8 @@ python3 main.py
 
 ## File Download Location
 
-If the `--custom-path <custom_path>` argument is used, the downloaded files will be saved in `<custom_path>/Downloads`. Otherwise, the files will be saved in a `Downloads` folder created within the script's directory
+If the `--custom-path <custom_path>` argument is used, the downloaded files will be saved in `<custom_path>/Downloads`.
+Otherwise, the files will be saved in a `Downloads` folder created within the script's directory
 
 ### Usage
 
@@ -191,6 +198,27 @@ To download a single file or album without the UI, you can use this command:
 python3 downloader.py <bunkr_url> --disable-ui
 ```
 
+## Maximum Number of Retries
+
+When the download fails, by default there is 5 retry attempts to download each media file again.
+You can control the number of maximum attempts with the `--max-retries` argument.
+It may be useful when you would like to skip broken media faster for the very large media collection.
+
+### Usage
+
+Allowed values: 0 (don't re-download) and larger.
+
+```bash
+python3 downloader.py <bunkr_url> --max-retries 3
+```
+
+### Example:
+
+```bash
+python3 downloader.py https://bunkr.si/a/PUK068QE --max-retries 3
+```
+
 ## Logging
 
-The application logs any issues encountered during the download process in a file named `session_log.txt`. Check this file for any URLs that may have been blocked or had errors.
+The application logs any issues encountered during the download process in a file named `session.log`.
+Check this file for any URLs that may have been blocked or had errors.

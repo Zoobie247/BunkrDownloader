@@ -19,16 +19,27 @@ from .config import (
     MEDIA_SLUG_REGEX,
     URL_TYPE_MAPPING,
     VALID_SLUG_REGEX,
+    SkippedReason,
 )
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
+
+    from src.managers.live_manager import LiveManager
 
 
 def get_host_page(url: str) -> str:
     """Extract the base host URL from a given URL."""
     url_netloc = urlparse(url).netloc
     return f"https://{url_netloc}"
+
+
+def add_https_prefix(url: str) -> str:
+    """Add the 'https://' prefix to the provided URL if it is not already present."""
+    if not url.startswith("https://"):
+        return f"https://{url}"
+
+    return url
 
 
 def replace_domain_with_fallback(url: str) -> str:
@@ -53,6 +64,18 @@ def check_url_type(url: str) -> bool:
     log_message = f"Invalid URL format for: {url}. Unexpected URL type '{url_type}'."
     logging.warning(log_message)
     sys.exit(1)
+
+
+def log_unavailable_url(live_manager: LiveManager, url: str) -> None:
+    """Log the unavailability of the specified URL.
+
+    This function is called when the page cannot be fetched or is unavailable.
+    """
+    live_manager.update_log(
+        event="Service unavailable",
+        details=f"The page {url} is currently unavailable. Verify the link and retry.",
+    )
+    live_manager.update_summary(SkippedReason.SERVICE_UNAVAILABLE)
 
 
 def get_identifier(url: str, soup: BeautifulSoup | None = None) -> str:
@@ -126,9 +149,10 @@ def get_album_name(soup: BeautifulSoup) -> str | None:
 
     raw_album_name = name_container.find("h1").get_text(strip=True)
     unescaped_album_name = html.unescape(raw_album_name)
+    fixed_album_name = unescaped_album_name  # Prevent UnboundLocalError
 
-    # Attempt to fix mojibake (UTF-8 bytes mis-decoded as Latin-1). If encoding/decoding
-    # fails, keep the decoded version
+    # Attempt to fix mojibake (UTF-8 bytes mis-decoded as Latin-1).
+    # If encoding/decoding fails, keep the decoded version.
     with contextlib.suppress(UnicodeEncodeError, UnicodeDecodeError):
         fixed_album_name = unescaped_album_name.encode("latin1").decode("utf-8")
 
